@@ -14,10 +14,16 @@ public class User {
     private Long id;
     @Column(nullable = false, name = "name")
     private String name;
+    @Column(nullable = false, name = "username")
+    private String username;
+    @Column(nullable = false, name = "password")
+    private String password;
 
     public User() {}
 
-    public User(String name) {
+    public User(String name, String username, String password) {
         this.name = name;
+        this.username = username;
+        this.password = password;
     }
 }
