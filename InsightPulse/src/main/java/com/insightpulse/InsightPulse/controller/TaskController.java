@@ -10,10 +10,7 @@ import com.insightpulse.InsightPulse.service.TaskService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 @RestController
@@ -45,6 +42,13 @@ public class TaskController {
         User user = getCurrentUser(request);
         Task task = taskService.createTask(taskRequest, user);
         return ResponseEntity.ok(task);
+    }
+
+    @GetMapping("/my-tasks")
+    public ResponseEntity<Iterable<Task>> getTaskByUser(HttpServletRequest request){
+        User user = getCurrentUser(request);
+        Iterable<Task> tasks = taskService.getTaskByUser(user);
+        return ResponseEntity.ok(tasks);
     }
 
 }
