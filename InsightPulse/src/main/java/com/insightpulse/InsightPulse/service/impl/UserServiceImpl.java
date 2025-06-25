@@ -3,6 +3,7 @@ package com.insightpulse.InsightPulse.service.impl;
 import com.insightpulse.InsightPulse.model.User;
 import com.insightpulse.InsightPulse.repository.UserRepository;
 import com.insightpulse.InsightPulse.service.UserService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,7 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
 
     @Override
+    @Transactional
     public User createUser(User user){
         return userRepository.save(user);
     }
