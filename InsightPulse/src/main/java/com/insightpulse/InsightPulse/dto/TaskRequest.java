@@ -13,5 +13,5 @@ public class TaskRequest {
     private String taskDueDate;
     private Priority taskPriority;
     private Status taskStatus;
-    private Long userId;
+
 }

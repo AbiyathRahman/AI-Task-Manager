@@ -33,7 +33,8 @@ public class TaskServiceImpl implements TaskService {
         task.setTaskDescription(taskRequest.getTaskDescription());
         task.setTaskPriority(taskRequest.getTaskPriority());
         task.setTaskStatus(taskRequest.getTaskStatus());
-        task.setId(taskRequest.getUserId());
+        task.setUser(user);
+        task.setTaskDueDate(taskRequest.getTaskDueDate());
 
         return taskRepository.save(task);
 
