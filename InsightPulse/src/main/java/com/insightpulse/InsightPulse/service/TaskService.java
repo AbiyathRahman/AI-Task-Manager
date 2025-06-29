@@ -11,7 +11,8 @@ public interface TaskService {
 
     Task createTask(TaskRequest task, User user);
     List<Task> getTaskByUser(User user);
-//    Task getTaskById(Long id);
+    Task updateTask(TaskRequest taskRequest, Task task);
+    Task getTaskById(Long id);
 //    void deleteTaskById(Long id);
 //    void deleteTaskByTitle(String title);
 //    boolean existsById(Long id);

@@ -43,12 +43,20 @@ public class TaskServiceImpl implements TaskService {
     public List<Task> getTaskByUser(User user){
         return taskRepository.findByUser(user);
     }
+    @Override public Task updateTask(TaskRequest taskRequest, Task task){
+        task.setTaskName(taskRequest.getTaskName());
+        task.setTaskDescription(taskRequest.getTaskDescription());
+        task.setTaskPriority(taskRequest.getTaskPriority());
+        task.setTaskStatus(taskRequest.getTaskStatus());
+        task.setTaskDueDate(taskRequest.getTaskDueDate());
+        return taskRepository.save(task);
+    }
 
-//    @Override
-//    public Task getTaskById(Long id){
-//        Optional<Task> task = taskRepository.findById(id);
-//        return task.orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
-//    }
+    @Override
+    public Task getTaskById(Long id){
+       Optional<Task> task = taskRepository.findById(id);
+        return task.orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
+    }
 //    @Override
 //    public void deleteTaskById(Long id){
 //        if(!taskRepository.existsById(id)){

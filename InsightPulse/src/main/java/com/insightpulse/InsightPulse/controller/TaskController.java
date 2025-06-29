@@ -50,5 +50,21 @@ public class TaskController {
         Iterable<Task> tasks = taskService.getTaskByUser(user);
         return ResponseEntity.ok(tasks);
     }
+    @PutMapping("/{id}")
+    public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody TaskRequest taskRequest){
+        if(taskRequest.getTaskName() == null){
+            throw new IllegalArgumentException("Task name cannot be empty");
+        }
+        var taskToUpdate = taskService.getTaskById(id);
+        if(taskToUpdate != null){
+            taskService.updateTask(taskRequest, taskToUpdate);
+            return ResponseEntity.ok(taskToUpdate);
+
+        }else{
+            throw new RuntimeException("Task not found with id: " + id);
+        }
+
+
+    }
 
 }
