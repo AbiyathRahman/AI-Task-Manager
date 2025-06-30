@@ -25,9 +25,6 @@ public class TaskServiceImpl implements TaskService {
             throw new IllegalArgumentException("Task name cannot be empty");
         }
 
-        if (taskRepository.existsByTaskName(taskRequest.getTaskName())) {
-            throw new IllegalArgumentException("Task name already exists");
-        }
         Task task = new Task();
         task.setTaskName(taskRequest.getTaskName());
         task.setTaskDescription(taskRequest.getTaskDescription());
@@ -57,13 +54,13 @@ public class TaskServiceImpl implements TaskService {
        Optional<Task> task = taskRepository.findById(id);
         return task.orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
     }
-//    @Override
-//    public void deleteTaskById(Long id){
-//        if(!taskRepository.existsById(id)){
-//            throw new RuntimeException("Task not found with id: " + id);
-//        }
-//        taskRepository.deleteById(id);
-//    }
+    @Override
+    public void deleteTaskById(Long id){
+        if(!taskRepository.existsById(id)){
+            throw new RuntimeException("Task not found with id: " + id);
+        }
+        taskRepository.deleteById(id);
+    }
 //    @Override
 //    public void deleteTaskByTitle(String title){
 //        if(!taskRepository.existsByTaskName(title)){

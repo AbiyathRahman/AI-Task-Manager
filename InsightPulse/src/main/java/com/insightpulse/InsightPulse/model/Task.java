@@ -6,7 +6,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "task")
+
+@Table(name = "tasks")
 @Getter
 @Setter
 @SuppressWarnings("unused")

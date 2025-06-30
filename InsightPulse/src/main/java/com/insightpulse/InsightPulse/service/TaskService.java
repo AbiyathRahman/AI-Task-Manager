@@ -13,7 +13,7 @@ public interface TaskService {
     List<Task> getTaskByUser(User user);
     Task updateTask(TaskRequest taskRequest, Task task);
     Task getTaskById(Long id);
-//    void deleteTaskById(Long id);
+    void deleteTaskById(Long id);
 //    void deleteTaskByTitle(String title);
 //    boolean existsById(Long id);
 //    boolean existsByTitle(String title);
