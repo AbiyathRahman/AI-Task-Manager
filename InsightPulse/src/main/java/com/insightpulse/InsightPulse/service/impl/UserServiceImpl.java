@@ -40,6 +40,9 @@ public class UserServiceImpl implements UserService {
     public Optional<User> getUserById(Long id){
         return Optional.ofNullable(userRepository.findById(id).orElse(null));
     }
-
+    @Override
+    public void updateUserName(User user){
+        userRepository.save(user);
+    }
 
 }
