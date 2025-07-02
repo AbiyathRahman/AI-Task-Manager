@@ -7,10 +7,13 @@ import com.insightpulse.InsightPulse.model.User;
 import com.insightpulse.InsightPulse.repository.UserRepository;
 import com.insightpulse.InsightPulse.security.JwtUtil;
 import com.insightpulse.InsightPulse.service.TaskService;
+import com.insightpulse.InsightPulse.service.impl.BedrockAIService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 @RestController
@@ -25,6 +28,8 @@ public class TaskController {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private BedrockAIService bedrockAIService;
 
     private User getCurrentUser(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
@@ -71,5 +76,13 @@ public class TaskController {
         taskService.deleteTaskById(id);
         return ResponseEntity.ok().build();
     }
+    @GetMapping("/insights")
+    public ResponseEntity<String> getAIInsights(HttpServletRequest request) {
+        User user = getCurrentUser(request);
+        List<Task> tasks = taskService.getTaskByUser(user);
+        String aiFeedback = bedrockAIService.getTaskInsight(tasks);
+        return ResponseEntity.ok(aiFeedback);
+    }
+
 
 }
