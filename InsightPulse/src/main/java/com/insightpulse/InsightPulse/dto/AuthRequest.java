@@ -7,6 +7,7 @@ import lombok.Setter;
 @SuppressWarnings("unused")
 @Setter
 public class AuthRequest {
+    private String name;
     private String username;
     private String password;
 
