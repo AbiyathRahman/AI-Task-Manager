@@ -1,6 +1,7 @@
 package com.insightpulse.InsightPulse.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.services.calendar.model.Event;
 import com.insightpulse.InsightPulse.model.Task;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
@@ -145,6 +146,55 @@ Be specific, actionable, and supportive in your analysis. Focus on helping them 
             e.printStackTrace();
             return "Error generating insight";
         }
+    }
+
+    public String getEventInsight(List<String> events) {
+        LocalDate today = LocalDate.now();
+        String currentDate = today.format(DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy"));
+
+        String content = """
+You are an expert time management coach providing a requested google calendar event management service. I want your help analyzing my events such as meetings or classes for the next days list to improve their productivity and time management.If there is nothing in the list then provide a nice message back. 
+I want you to be friendly, motivating and concise about your response. Break down what i should do and be friendly
+Here is the task list they've shared for analysis:
+
+%s
+
+
+
+""".formatted(events);
+
+        try{
+            Map<String, Object> requestMap = new HashMap<>();
+            requestMap.put("anthropic_version", "bedrock-2023-05-31");
+            requestMap.put("max_tokens", 300);
+            requestMap.put("temperature", 0.7);
+            List<Map<String, String>> messages = new ArrayList<>();
+            messages.add(Map.of(
+                    "role", "user",
+                    "content", content
+            ));
+            requestMap.put("messages", messages);
+            String systemPrompt = "You are Claude, an AI assistant created by Anthropic. You are an expert productivity coach. Respond as if it's" + currentDate + " and be aware of current productivity trends and tools.";
+            requestMap.put("system", systemPrompt );
+
+            ObjectMapper mapper = new ObjectMapper();
+            String jsonBody = mapper.writeValueAsString(requestMap);
+
+            InvokeModelRequest model = InvokeModelRequest.builder()
+                    .modelId("anthropic.claude-v2:1")
+                    .contentType("application/json")
+                    .accept("application/json")
+                    .body(SdkBytes.fromUtf8String(jsonBody))
+                    .build();
+            InvokeModelResponse response = bedrockClient.invokeModel(model);
+            return response.body().asUtf8String();
+
+        }catch(Exception e){
+            e.printStackTrace();
+            return "Error generating insight";
+
+        }
+
     }
 
 }
