@@ -1,5 +1,6 @@
 package com.insightpulse.InsightPulse.controller;
 
+import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.services.calendar.model.Event;
 import com.insightpulse.InsightPulse.model.User;
 import com.insightpulse.InsightPulse.security.JwtUtil;
@@ -35,6 +36,7 @@ public class GoogleCalendarController {
     private com.insightpulse.InsightPulse.repository.UserRepository userRepository;
     @Autowired
     private BedrockAIService bedrockAIService;
+
 
     private User getCurrentUser(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
@@ -73,9 +75,17 @@ public class GoogleCalendarController {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "Authorization code is required"));
             }
+            TokenResponse tokens = googleCalendarService.exchangeCodeForTokens(code);
+            if (tokens == null) {
+                logger.warn("Failed to exchange authorization code for tokens");
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Failed to exchange authorization code for tokens"));
+            }
+            currentUser.setRefreshToken(tokens.getRefreshToken());
+            userRepository.save(currentUser);
 
             // Fetch events from Google Calendar
-            List<Event> events = googleCalendarService.getEvents(code, currentUser.getUsername());
+            List<Event> events = googleCalendarService.getEvents(currentUser.getUsername());
 
             // Format events for response
             List<String> formattedEvents = events.stream()
@@ -125,7 +135,7 @@ public class GoogleCalendarController {
                         .body("Authorization code is required");
             }
             logger.info("Processing calendar events for user: {}", currentUser.getUsername());
-            List<Event> currUserEvents = googleCalendarService.getEvents(code, currentUser.getUsername());
+            List<Event> currUserEvents = googleCalendarService.getEvents(currentUser.getUsername());
             List<String> formattedEvents = currUserEvents.stream()
                     .map(event -> {
                         String start = event.getStart().getDateTime() != null ?

@@ -1,16 +1,16 @@
 package com.insightpulse.InsightPulse.service.impl;
 
 import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
-import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest;
-import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.auth.oauth2.TokenResponse;
+import com.google.api.client.googleapis.auth.oauth2.*;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
+import com.insightpulse.InsightPulse.model.User;
+import com.insightpulse.InsightPulse.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,6 +29,7 @@ import java.util.Map;
 public class GoogleCalendarService {
 
     private static final Logger logger = LoggerFactory.getLogger(GoogleCalendarService.class);
+    private final UserRepository userRepository;
 
     @Value("${google.client.id}")
     private String clientId;
@@ -46,6 +47,10 @@ public class GoogleCalendarService {
     // In-memory storage for tokens (replace with database in production)
     private final Map<String, GoogleTokenResponse> tokenStore = new ConcurrentHashMap<>();
 
+    public GoogleCalendarService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
     public String getAuthorizationUrl() throws Exception {
         GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
                 httpTransport,
@@ -62,31 +67,47 @@ public class GoogleCalendarService {
                 .build();
     }
 
+    public TokenResponse exchangeCodeForTokens(String authCode) throws Exception {
+        return new GoogleAuthorizationCodeTokenRequest(
+                new NetHttpTransport(),
+                jsonFactory,
+                clientId,
+                clientSecret,
+                authCode,
+                redirectUri
+        ).execute();
+    }
 
-    public List<Event> getEvents(String authCode, String userId) throws Exception {
+
+    public List<Event> getEvents(String user) throws Exception {
         try {
-            // Always exchange the authorization code for fresh tokens
-            // This ensures we get events from the correct Google account
-            logger.info("Exchanging authorization code for fresh tokens for user: {}", userId);
+            logger.info("Using refresh token to get access token for user: {}", user);
 
-            GoogleAuthorizationCodeTokenRequest request = new GoogleAuthorizationCodeTokenRequest(
+            // 1. Get the stored refresh token for this user
+            String refreshToken = userRepository.findByUsername(user).get().getRefreshToken();
+            if (refreshToken == null) {
+                logger.error("No refresh token found for user: {}", user);
+                throw new RuntimeException("No refresh token found for user: " + user);
+            }
+
+            // 2. Use the refresh token to get a new access token
+            GoogleTokenResponse tokenResponse = new GoogleRefreshTokenRequest(
                     httpTransport,
                     jsonFactory,
+                    refreshToken,
                     clientId,
-                    clientSecret,
-                    authCode,
-                    redirectUri // Use the same redirectUri
-            );
+                    clientSecret
+            ).execute();
 
-            GoogleTokenResponse tokenResponse = request.execute();
+            // 3. Build a Credential object from the token response
+            GoogleCredential credential = new GoogleCredential.Builder()
+                    .setTransport(httpTransport)
+                    .setJsonFactory(jsonFactory)
+                    .setClientSecrets(clientId, clientSecret)
+                    .build()
+                    .setFromTokenResponse(tokenResponse);
 
-            // Store the new token for future use (replaces any old token)
-            tokenStore.put(userId, tokenResponse);
-            logger.info("Stored fresh token for user: {}", userId);
-
-            Credential credential = createCredentialFromToken(tokenResponse);
-
-            // Create Calendar service
+            // 4. Create the Calendar service
             Calendar service = new Calendar.Builder(
                     httpTransport,
                     jsonFactory,
@@ -94,7 +115,7 @@ public class GoogleCalendarService {
                     .setApplicationName("InsightPulse")
                     .build();
 
-            // Fetch events
+            // 5. Fetch events
             Events events = service.events().list("primary")
                     .setMaxResults(10)
                     .setOrderBy("startTime")
@@ -110,7 +131,7 @@ public class GoogleCalendarService {
 
             // If it's an invalid_grant error, clear stored tokens
             if (e.getMessage().contains("invalid_grant")) {
-                tokenStore.remove(userId);
+                tokenStore.remove(user);
                 logger.info("Cleared stored tokens due to invalid_grant error");
             }
 

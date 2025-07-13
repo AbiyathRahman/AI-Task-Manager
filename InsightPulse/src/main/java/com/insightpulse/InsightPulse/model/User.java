@@ -18,6 +18,8 @@ public class User {
     private String username;
     @Column(nullable = false, name = "password")
     private String password;
+    @Column(nullable = true, name = "refreshToken")
+    private String refreshToken;
 
     public User() {}
 
