@@ -114,6 +114,7 @@ public class GoogleCalendarController {
                     .body(Map.of("error", "Failed to fetch calendar events"));
         }
     }
+
     @GetMapping("/event-insights")
     public ResponseEntity<String> getEventInsights(@RequestParam("code") String code, HttpServletRequest request) {
         try {

@@ -62,35 +62,29 @@ public class GoogleCalendarService {
                 .build();
     }
 
+
     public List<Event> getEvents(String authCode, String userId) throws Exception {
         try {
-            // Check if we already have a valid token for this user
-            GoogleTokenResponse storedToken = tokenStore.get(userId);
+            // Always exchange the authorization code for fresh tokens
+            // This ensures we get events from the correct Google account
+            logger.info("Exchanging authorization code for fresh tokens for user: {}", userId);
 
-            Credential credential;
-            if (storedToken != null) {
-                // Use stored token
-                credential = createCredentialFromToken(storedToken);
-                logger.info("Using stored token for user: {}", userId);
-            } else {
-                // Exchange authorization code for tokens
-                logger.info("Exchanging authorization code for tokens");
-                GoogleAuthorizationCodeTokenRequest request = new GoogleAuthorizationCodeTokenRequest(
-                        httpTransport,
-                        jsonFactory,
-                        clientId,
-                        clientSecret,
-                        authCode,
-                        redirectUri // Use the same redirectUri
-                );
+            GoogleAuthorizationCodeTokenRequest request = new GoogleAuthorizationCodeTokenRequest(
+                    httpTransport,
+                    jsonFactory,
+                    clientId,
+                    clientSecret,
+                    authCode,
+                    redirectUri // Use the same redirectUri
+            );
 
-                GoogleTokenResponse tokenResponse = request.execute();
+            GoogleTokenResponse tokenResponse = request.execute();
 
-                // Store the token for future use
-                tokenStore.put(userId, tokenResponse);
+            // Store the new token for future use (replaces any old token)
+            tokenStore.put(userId, tokenResponse);
+            logger.info("Stored fresh token for user: {}", userId);
 
-                credential = createCredentialFromToken(tokenResponse);
-            }
+            Credential credential = createCredentialFromToken(tokenResponse);
 
             // Create Calendar service
             Calendar service = new Calendar.Builder(
@@ -99,8 +93,6 @@ public class GoogleCalendarService {
                     credential)
                     .setApplicationName("InsightPulse")
                     .build();
-
-
 
             // Fetch events
             Events events = service.events().list("primary")
@@ -125,6 +117,7 @@ public class GoogleCalendarService {
             throw e;
         }
     }
+
 
     private Credential createCredentialFromToken(GoogleTokenResponse tokenResponse) {
         try {
