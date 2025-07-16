@@ -54,4 +54,16 @@ public class UserController {
         userService.updateUserName(user);
 
     }
+    @PutMapping("/change-tier")
+    public void basicTier(@RequestBody UserRequest userRequest, HttpServletRequest request){
+        User user = getCurrentUser(request);
+        if(userRequest.getTier() == null){
+            throw new IllegalArgumentException("Tier cannot be empty");
+        }
+        if(userRequest.getTier() == user.getTier()){
+            throw new IllegalArgumentException("Tier cannot be the same as the current tier");
+        }
+        user.setTier(userRequest.getTier());
+        userService.updateUserTier(user);
+    }
 }

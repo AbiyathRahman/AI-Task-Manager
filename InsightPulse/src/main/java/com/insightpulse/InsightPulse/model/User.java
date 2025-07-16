@@ -20,8 +20,10 @@ public class User {
     private String password;
     @Column(nullable = true, name = "refreshToken")
     private String refreshToken;
-    @Column(nullable = false, name = "tier" )
-    private Tier tier;
+    @Column(nullable = true, name = "tier")
+    @Enumerated(EnumType.STRING)
+    private Tier tier = Tier.FREE;
+
 
     public User() {}
 
@@ -29,6 +31,5 @@ public class User {
         this.name = name;
         this.username = username;
         this.password = password;
-        this.tier = Tier.FREE;
     }
 }

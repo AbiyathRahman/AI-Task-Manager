@@ -2,6 +2,7 @@ package com.insightpulse.InsightPulse.controller;
 
 import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.services.calendar.model.Event;
+import com.insightpulse.InsightPulse.config.TierGuard;
 import com.insightpulse.InsightPulse.model.User;
 import com.insightpulse.InsightPulse.security.JwtUtil;
 import com.insightpulse.InsightPulse.service.impl.BedrockAIService;
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -135,6 +137,7 @@ public class GoogleCalendarController {
                         .body("Authorization code is required");
             }
             logger.info("Processing calendar events for user: {}", currentUser.getUsername());
+            TierGuard.checkPremiumFeature(currentUser);
             List<Event> currUserEvents = googleCalendarService.getEvents(currentUser.getUsername());
             List<String> formattedEvents = currUserEvents.stream()
                     .map(event -> {
@@ -156,7 +159,13 @@ public class GoogleCalendarController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Authentication failed");
 
-        } catch (Exception e) {
+        }catch (AccessDeniedException e) {
+            logger.warn("Access denied: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(e.getMessage());
+        }
+
+        catch (Exception e) {
             logger.error("Error fetching calendar events: {}", e.getMessage(), e);
 
             // Handle specific Google API errors

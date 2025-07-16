@@ -1,5 +1,6 @@
 package com.insightpulse.InsightPulse.controller;
 
+import com.insightpulse.InsightPulse.config.TierGuard;
 import com.insightpulse.InsightPulse.dto.TaskRequest;
 import com.insightpulse.InsightPulse.dto.TaskResponse;
 import com.insightpulse.InsightPulse.model.Task;
@@ -79,6 +80,7 @@ public class TaskController {
     @GetMapping("/insights")
     public ResponseEntity<String> getAIInsights(HttpServletRequest request) {
         User user = getCurrentUser(request);
+        TierGuard.checkBasicFeature(user);
         List<Task> tasks = taskService.getTaskByUser(user);
         String aiFeedback = bedrockAIService.getTaskInsight(tasks);
         return ResponseEntity.ok(aiFeedback);
