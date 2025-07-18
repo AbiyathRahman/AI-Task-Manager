@@ -11,6 +11,7 @@ import com.insightpulse.InsightPulse.service.TaskService;
 import com.insightpulse.InsightPulse.service.impl.BedrockAIService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -80,7 +81,9 @@ public class TaskController {
     @GetMapping("/insights")
     public ResponseEntity<String> getAIInsights(HttpServletRequest request) {
         User user = getCurrentUser(request);
-        TierGuard.checkBasicFeature(user);
+        if(!TierGuard.canUseClaude(user.getTier())){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You cannot use this feature, Upgrade to Basic");
+        }
         List<Task> tasks = taskService.getTaskByUser(user);
         String aiFeedback = bedrockAIService.getTaskInsight(tasks);
         return ResponseEntity.ok(aiFeedback);

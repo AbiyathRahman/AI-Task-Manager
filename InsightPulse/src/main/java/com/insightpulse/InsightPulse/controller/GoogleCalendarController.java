@@ -137,7 +137,9 @@ public class GoogleCalendarController {
                         .body("Authorization code is required");
             }
             logger.info("Processing calendar events for user: {}", currentUser.getUsername());
-            TierGuard.checkPremiumFeature(currentUser);
+            if(!TierGuard.canUseClaude(currentUser.getTier())){
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You cannot use this feature, Upgrade to Basic");
+            }
             List<Event> currUserEvents = googleCalendarService.getEvents(currentUser.getUsername());
             List<String> formattedEvents = currUserEvents.stream()
                     .map(event -> {

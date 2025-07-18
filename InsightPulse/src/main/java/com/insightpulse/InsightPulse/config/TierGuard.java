@@ -19,4 +19,11 @@ public class TierGuard {
             throw new AccessDeniedException("Pro feature not available for premium users");
         }
     }
+    public static boolean canUseClaude(Tier tier){
+        return tier == Tier.BASIC || tier == Tier.PREMIUM;
+    }
+    public static boolean canUseCalendar(Tier tier){
+        return tier == Tier.BASIC || tier == Tier.PREMIUM;
+    }
+
 }
