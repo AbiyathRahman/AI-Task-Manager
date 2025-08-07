@@ -81,6 +81,7 @@ public class TaskController {
     @GetMapping("/insights")
     public ResponseEntity<String> getAIInsights(HttpServletRequest request) {
         User user = getCurrentUser(request);
+
         if(!TierGuard.canUseClaude(user.getTier())){
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You cannot use this feature, Upgrade to Basic");
         }
